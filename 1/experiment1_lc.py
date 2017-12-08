@@ -12,6 +12,7 @@ def compute_error(b,m,x,y,c=0.9):
     N = len(y)
     x.shape=(N,14)
     totalError +=(m.T.dot(m))*0.5
+    temp2 = 0
     for i in range(N):
         temp = (1-y[i]*(x[i].dot(m)+b))
         if(temp>0):
@@ -29,6 +30,9 @@ def optimizer(x,y,x_test,y_test,starting_b,starting_m,learning_rate,num_iter,c=0
     m.shape=(14,1)
     error_list1 = np.arange(num_iter)
     error_list2 = np.arange(num_iter)
+    m_min=0
+    b_min=0
+    error_min=1
     #br, mr = compute_gradient(starting_b, starting_m, x_test, y_test, learning_rate,c)
 
     for i in range(num_iter):
@@ -41,9 +45,13 @@ def optimizer(x,y,x_test,y_test,starting_b,starting_m,learning_rate,num_iter,c=0
             print ('iter {0}:error={1}'.format(i,temp))
         temp = compute_error(b, m, x, y,c)
         error_list1[i] = temp
+        if(temp<error_min):
+            error_min=temp
+            b_min=b
+            m_min=m
         temp2 = compute_error(b,m,x_test,y_test,c)
         error_list2[i] = temp2
-    return[b,m,error_list1,error_list2]
+    return[b_min,m_min,error_list1,error_list2]
 
 
 def compute_gradient(b_current,m_current,x,y,learning_rate,c=0.9):
@@ -60,7 +68,7 @@ def compute_gradient(b_current,m_current,x,y,learning_rate,c=0.9):
     if((1-y[i]*(x[i,:].dot(m_current))>=0)):
         gw=-y[i]*x[i,:]
         gb=-y[i]
-        m_gradient = m_current + c * (gw.T)
+        m_gradient = c * (gw.T)
     else:
         gw = 0
         gb = 0
@@ -85,8 +93,8 @@ def compute_gradient_all(b_current,m_current,x_train,y_train,x_test,y_test,learn
     y_train.shape=(nt,1)
     y_test.shape=(nn,1)
     m_current.shape=(14,1)
-    m_gradient = m_current
-    m_gradient.shape = (14,1)
+    m_gradient = 0
+    #m_gradient.shape = (14,1)
     for i in range(nt):
         if((1-y_train[i]*(x_train[i,:].dot(m_current))>=0)):
             gw=-y_train[i]*x_train[i,:]
@@ -105,7 +113,7 @@ def compute_gradient_all(b_current,m_current,x_train,y_train,x_test,y_test,learn
         else:
             gw = 0
             gb = 0
-            m_gradient = 0
+            m_gradient += 0
         b_gradient += c*gb
     
     new_b = b_current-(learning_rate*b_gradient)
@@ -131,7 +139,7 @@ def Linear_regression():
     x_test=x_test.todense()
     y_train.reshape((y_t,1))
     y_test.reshape((y_e,1))
-    learning_rate = 0.01
+    learning_rate = 0.008
     init_b = 0.0
     init_m = np.zeros(14)
     num_iter = 1000
@@ -148,4 +156,3 @@ def Linear_regression():
 
 if __name__ =='__main__':
     Linear_regression()
-
