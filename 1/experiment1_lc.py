@@ -11,19 +11,14 @@ def compute_error(b,m,x,y,c=0.9):
     totalError = 0
     N = len(y)
     x.shape=(N,14)
-    #totalError=(y-x.todense().dot(m)-b)
-    totalError +=m.T.dot(m)
-    #totalError=totalError.T.dot(totalError)
+    totalError +=(m.T.dot(m))*0.5
     for i in range(N):
         temp = (1-y[i]*(x[i].dot(m)+b))
         if(temp>0):
             pass
-            #temp2 = 1
         else:
             temp = 0
-            #temp2 = 0
         totalError += c*temp
-        #totalError +=temp
 
     return totalError/float(N)
 
@@ -34,19 +29,16 @@ def optimizer(x,y,x_test,y_test,starting_b,starting_m,learning_rate,num_iter,c=0
     m.shape=(14,1)
     error_list1 = np.arange(num_iter)
     error_list2 = np.arange(num_iter)
-    br, mr = compute_gradient(starting_b, starting_m, x_test, y_test, learning_rate,c)
+    #br, mr = compute_gradient(starting_b, starting_m, x_test, y_test, learning_rate,c)
 
     for i in range(num_iter):
         if(i==0):
-            b,m=compute_gradient(b,m,x,y,learning_rate,c)
-            b+=br
-            m+=mr
+            b,m=compute_gradient_all(b,m,x,y,x_test,y_test,learning_rate,c)
         else:
             b, m = compute_gradient(b, m, x, y, learning_rate,c)
         if(i%10==0):
             temp = compute_error(b,m,x,y,c)
             print ('iter {0}:error={1}'.format(i,temp))
-            #error_list[int(i/100)]=temp
         temp = compute_error(b, m, x, y,c)
         error_list1[i] = temp
         temp2 = compute_error(b,m,x_test,y_test,c)
@@ -63,15 +55,8 @@ def compute_gradient(b_current,m_current,x,y,learning_rate,c=0.9):
     n=len(y)
     N = float(n)
     i = random.randint(0,n-1)
-    #x = data[:,0]
-    #y = data[:,1]
-    #temp = np.ones((n, 1))*b_current
     y.shape=(n,1)
     m_current.shape=(14,1)
-    #b_gradient = -(2/N)*(y-x.todense().dot(m_current)-b_current)
-    #b_gradient = b_gradient.mean()
-    #m_gradient = -(2/N)*x.todense().T*(((y-x.todense().dot(m_current)-b_current)))
-    #m_gradient = m_gradient.mean(axis=0)
     if((1-y[i]*(x[i,:].dot(m_current))>=0)):
         gw=-y[i]*x[i,:]
         gb=-y[i]
@@ -88,15 +73,48 @@ def compute_gradient(b_current,m_current,x,y,learning_rate,c=0.9):
     return[new_b,new_m]
 
 
+def compute_gradient_all(b_current,m_current,x_train,y_train,x_test,y_test,learning_rate,c=0.9):
+    b_gradient = 0
+    m_gradient = 0
+    gw = 0
+    gb = 0
+    nt = len(y_train)
+    nn = len(y_test)
+    x_train.shape=(nt,14)
+    x_test.shape=(nn,14)
+    y_train.shape=(nt,1)
+    y_test.shape=(nn,1)
+    m_current.shape=(14,1)
+    m_gradient = m_current
+    m_gradient.shape = (14,1)
+    for i in range(nt):
+        if((1-y_train[i]*(x_train[i,:].dot(m_current))>=0)):
+            gw=-y_train[i]*x_train[i,:]
+            gb=-y_train[i]
+            m_gradient += c * (gw.T)
+        else:
+            gw = 0
+            gb = 0
+            m_gradient += 0
+        b_gradient += c*gb
+    for i in range(nn):
+        if((1-y_test[i]*(x_test[i,:].dot(m_current))>=0)):
+            gw=-y_test[i]*x_test[i,:]
+            gb=-y_test[i]
+            m_gradient += c * (gw.T)
+        else:
+            gw = 0
+            gb = 0
+            m_gradient = 0
+        b_gradient += c*gb
+    
+    new_b = b_current-(learning_rate*b_gradient)
+    new_m = m_current-(learning_rate*m_gradient)
+    return[new_b,new_m]
+
+
 def plot_data(error,error2):
-    #x = data[:,0]
-    #y = data[:,1]
-    #y_predict = x.todense().dot(m)+b
-    #pylab.plot(x,y,'o')
-    #pylab.plot(x,y_predict,'k-')
-    #pylab.show()
     n = range(len(error))
-    #x = np.arange(n)*100
     pylab.plot(n,error,label='train')
     pylab.plot(n,error2,label='test')
     plt.legend()
@@ -119,20 +137,12 @@ def Linear_regression():
     num_iter = 1000
     error = 0
     error2 = 0
-    c = 0.8
+    c = 0.9
 
-
-    #print ('initial variables:\n initial_b = {0}\n intial_m = {1}\n error of begin = {2} \n'\
-        #.format(init_b,init_m,compute_error(init_b,init_m,x_train,y_train)))
-
-    #optimizing b and m
     [b ,m,error,error2] = optimizer(x_train,y_train,x_test,y_test,init_b,init_m,learning_rate,num_iter,c)
 
-    #print final b m error
     print ('final formula parmaters:\n b = {1}\n m={2}\n error of end = {3} \n'.format(num_iter,b,m,compute_error(b,m,x_train,y_train,c)))
 
-    #plot result
-    #plot_data(x_train,y_train,b,m)
     plot_data(error,error2)
 
 
