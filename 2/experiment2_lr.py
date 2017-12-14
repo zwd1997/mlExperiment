@@ -17,12 +17,12 @@ def compute_error(m,x,y,rp):
     totalError = 0
     N = len(y)
     x.shape=(N,124)
-    temp = rp*m.T.dot(m)
+    temp = 0.5*rp*m.T.dot(m)
     y_predict = sigmod(x.dot(m))
-    tt = -y*y_predict.T
-    temp+=float(1/N)*np.sum(np.log(1+np.exp(tt)))
-    #for i in range(N):
-        #temp+=float(1/N)*np.log(1+np.exp(tt[i,:]))
+    #tt = -y*y_predict.T
+    #temp+=float(1/N)*np.sum(np.log(1+np.exp(tt)))
+    for i in range(N):
+        temp+=float(1/N)*np.log(1+np.exp(-y[i]*y_predict[i]))
     #totalError=(y-x.todense().dot(m)-b)
     #totalError=totalError.T.dot(totalError)
     #totalError=np.sum(totalError)
@@ -39,9 +39,9 @@ def optimizer_NAG(x,y,x_test,y_test,starting_m,rp,num_iter):
 
     for i in range(num_iter):
         m = compute_gradient_NAG(m, x, y, rp)
-        if(i%10==0):
-            temp = compute_error(m,x,y,rp)
-            print ('iter {0}:error={1}'.format(i,temp))
+        #if(i%10==0):
+        temp = compute_error(m,x,y,rp)
+        print ('iter {0}:error={1}'.format(i,temp))
         #temp = compute_error(b, m, x, y)
         #error_list1[i] = temp
         temp2 = compute_error(m,x_test,y_test,rp)
@@ -65,7 +65,7 @@ def compute_gradient_NAG(m_current,x,y,rp,size=200):
     temp = random.randint(0, n - 200)
     for i in range(size):
         m_gradient+=(sigmod(x[temp+i,:].dot(m_current))-y[temp+i])*(x[temp+i,:].dot(m_current))
-    m_gradient/=N
+    m_gradient=m_gradient/N
 
     #new_b = b_current-(rp*b_gradient)
     new_m = m_current-(rp*m_gradient)
@@ -102,9 +102,9 @@ def Linear_regression():
     error = 0
     error2 = 0
 
-    [m,error,error2] = optimizer_NAG(x_train,y_train,x_test,y_test,init_m,rp,num_iter)
+    [m,error2] = optimizer_NAG(x_train,y_train,x_test,y_test,init_m,rp,num_iter)
 
-    print ('final formula parmaters:\n b = in m final number\n m={1}\n error of end = {2} \n'.format(num_iter,m,compute_error(b,m,x_train,y_train)))
+    print ('final formula parmaters:\n b = in m final number\n m={1} \n'.format(num_iter,m))
 
     plot_data(error,error2)
 
